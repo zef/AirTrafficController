@@ -1,8 +1,8 @@
-protocol Routable {
+public protocol Routable {
     var path: String { get }
 }
 
-protocol RequestHandler {
+public protocol RequestHandler {
     associatedtype Request: Routable
     associatedtype Response
 
@@ -12,8 +12,7 @@ protocol RequestHandler {
     var path: String { get }
     func respond(request: Request, params: [String: String]) -> Response
 
-    // have default implementations, but can be overrided
-    var friendlyString: String { get }
+    // have default implementations, but can be overridden
     func validMatch(request: Request, data: [String: String]) -> Bool
 }
 
@@ -23,24 +22,26 @@ protocol RequestHandler {
 // not sure if it's better to generate flat routes as they are added,
 // or to have a nested scheme where the nesting is calculated at matching time...
 // kinda prefer the latter
-struct FlyRouter<Route: RequestHandler> {
+public struct Router<Route: RequestHandler> {
 
-    var routes = [Route]()
+    public init() { }
 
-    mutating func register(routes: Route...) {
+    public var routes = [Route]()
+
+    public mutating func register(routes: Route...) {
         register(routes)
     }
-    mutating func register(routes: [Route]...) {
+    public mutating func register(routes: [Route]...) {
         self.routes.append(contentsOf: routes.flatMap{$0})
     }
 
-    func handle(request: Route.Request) -> Route.Response {
+    public func handle(request: Route.Request) -> Route.Response {
         guard let matchData = routeMatchData(request) else { return Route.defaultResponse }
         return matchData.route.respond(request, params: matchData.data)
     }
 
     // if path matches but not method, could suggest that to warn the dev about the potential problem
-    func routeMatchData(request: Route.Request) -> (route: Route, data: [String: String])? {
+    private func routeMatchData(request: Route.Request) -> (route: Route, data: [String: String])? {
         for route in routes {
             if let data = route.dataFromPath(request.path) where route.validMatch(request, data: data) {
                 return (route, data)
@@ -49,17 +50,13 @@ struct FlyRouter<Route: RequestHandler> {
         return nil
     }
 
-    var friendlyRouteList: String {
-        return routes.map { return $0.friendlyString }.joined(separator: "\n")
+    public var routeList: String {
+        return routes.map { return $0.path }.joined(separator: "\n")
     }
 }
 
 
-extension RequestHandler {
-
-    var friendlyString: String {
-        return self.path
-    }
+public extension RequestHandler {
 
     // intended to be overridden by Request types that implement additional matching logic
     func validMatch(request: Request, data: [String: String]) -> Bool {
