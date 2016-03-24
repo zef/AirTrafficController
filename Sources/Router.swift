@@ -1,3 +1,22 @@
+protocol Routable {
+    var path: String { get }
+}
+
+protocol RequestHandler {
+    associatedtype Request: Routable
+    associatedtype Response
+
+    // the response returned when no routes match
+    static var defaultResponse: Response { get }
+
+    var path: String { get }
+    func respond(request: Request, params: [String: String]) -> Response
+
+    // have default implementations, but can be overrided
+    var friendlyString: String { get }
+    func validMatch(request: Request, data: [String: String]) -> Bool
+}
+
 // would be cool to be able to nest routers
 // maybe even have a pattern where a controller defines a router, and then nests it at a mount point?
 // that would make refactoring routes really easy
@@ -33,25 +52,6 @@ struct FlyRouter<Route: RequestHandler> {
     var friendlyRouteList: String {
         return routes.map { return $0.friendlyString }.joined(separator: "\n")
     }
-}
-
-protocol Routable {
-    var path: String { get }
-}
-
-protocol RequestHandler {
-    associatedtype Request: Routable
-    associatedtype Response
-
-    // returned response when no routes match
-    static var defaultResponse: Response { get }
-
-    var path: String { get }
-    func respond(request: Request, params: [String: String]) -> Response
-
-    // have default implementations, but can be overrided
-    var friendlyString: String { get }
-    func validMatch(request: Request, data: [String: String]) -> Bool
 }
 
 
@@ -98,3 +98,4 @@ extension RequestHandler {
         return data
     }
 }
+
