@@ -2,7 +2,7 @@ public protocol Routable {
     var path: String { get }
 }
 
-public protocol RequestHandler {
+public protocol RequestHandler: CustomStringConvertible {
     associatedtype Request: Routable
     associatedtype Response
 
@@ -14,6 +14,13 @@ public protocol RequestHandler {
 
     // have default implementations, but can be overridden
     func validMatch(request: Request, data: [String: String]) -> Bool
+    // description is also overridable
+}
+
+public extension RequestHandler {
+    var description: String {
+        return path
+    }
 }
 
 // would be cool to be able to nest routers
@@ -51,7 +58,7 @@ public struct Router<Route: RequestHandler> {
     }
 
     public var routeList: String {
-        return routes.map { return $0.path }.joined(separator: "\n")
+        return routes.map { return String($0) }.joined(separator: "\n")
     }
 }
 
